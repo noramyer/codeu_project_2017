@@ -15,7 +15,11 @@
 
 package codeu.chat;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import codeu.chat.common.Hub;
 import codeu.chat.common.Relay;
@@ -31,6 +35,11 @@ import codeu.chat.util.connections.ClientConnectionSource;
 import codeu.chat.util.connections.Connection;
 import codeu.chat.util.connections.ConnectionSource;
 import codeu.chat.util.connections.ServerConnectionSource;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseCredentials;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 final class ServerMain {
 
@@ -42,19 +51,45 @@ final class ServerMain {
     /*
 
     Just some sample code to test firebase from the server side.
-
+    The following is just a test to get started
 
      */
-    
 
 
+    try {
+
+      // todo Download the json file as instructed on firebase and save in file
+      FileInputStream serviceAccount =
+              new FileInputStream("testingjavafirebase-firebase-adminsdk-c1loq-3f4c316dc3 .json");
 
 
+      // todo Change the databaseUrl
+      FirebaseOptions options = new FirebaseOptions.Builder()
+              .setCredential(FirebaseCredentials.fromCertificate(serviceAccount))
+              .setDatabaseUrl("https://testingjavafirebase.firebaseio.com")
+              .build();
+
+      FirebaseApp.initializeApp(options);
+
+    }
+    catch (FileNotFoundException exc) {
+      System.out.println("Could not find the json file");
+    }
 
 
+    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference ref = database.getReference();
+
+    Map<String, Integer> myMap = new HashMap<>();
+    myMap.put("test", 1);
+    ref.setValue(myMap);
 
 
+    /*
 
+    ***** ORIGINAL CODE BELOW ******
+
+     */
 
 
     Logger.enableConsoleOutput();
