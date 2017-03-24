@@ -38,6 +38,25 @@ final class ServerMain {
 
   public static void main(String[] args) {
 
+
+    /*
+
+    Just some sample code to test firebase from the server side.
+
+
+     */
+    
+
+
+
+
+
+
+
+
+
+
+
     Logger.enableConsoleOutput();
 
     try {
