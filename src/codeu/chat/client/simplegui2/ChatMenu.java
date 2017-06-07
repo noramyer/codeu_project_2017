@@ -125,6 +125,10 @@ public class ChatMenu {
   //Public method to call in order to display the main chat stage
   public void display() {
     stage.show();
+    AlertBox sentimentAlert = new AlertBox("Note on Sentiment Analysis", "In order to view "
+        + "the user sentiment scores, \nplease run the original client (sh run_client.sh) in a separate shell."
+        + "\nFor more information, please refer to the readme. ");
+    sentimentAlert.display();
   }
 
 
