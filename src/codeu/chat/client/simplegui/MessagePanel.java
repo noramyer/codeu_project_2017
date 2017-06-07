@@ -14,15 +14,27 @@
 
 package codeu.chat.client.simplegui;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.*;
-
+import codeu.chat.client.BroadCastReceiver;
 import codeu.chat.client.ClientContext;
 import codeu.chat.common.ConversationSummary;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 // NOTE: JPanel is serializable, but there is no need to serialize MessagePanel
 // without the @SuppressWarnings, the compiler will complain of no override for serialVersionUID
@@ -36,9 +48,27 @@ public final class MessagePanel extends JPanel {
 
   private final ClientContext clientContext;
 
-  public MessagePanel(ClientContext clientContext) {
+  private final BroadCastReceiver receiver;
+
+  public MessagePanel(ClientContext clientContext, BroadCastReceiver receiver) {
     super(new GridBagLayout());
     this.clientContext = clientContext;
+    this.receiver = receiver;
+    clientContext.message.linkReceiver(receiver);
+    this.receiver.onBroadCast(
+        (User author, Message message) -> {
+
+          // Display author name if available.  Otherwise display the author UUID.
+          final String authorName = author.name;
+
+          final String displayString = String.format("%s: [%s]: %s",
+              ((authorName == null) ? message.author : authorName), message.creation,
+              message.content);
+
+          messageListModel.addElement(displayString);
+        }
+    );
+
     initialize();
   }
 
@@ -50,8 +80,8 @@ public final class MessagePanel extends JPanel {
         clientContext.user.lookup(owningConversation.owner);
 
     messageOwnerLabel.setText("Owner: " +
-        ((u==null) ?
-            ((owningConversation==null) ? "" : owningConversation.owner) :
+        ((u == null) ?
+            ((owningConversation == null) ? "" : owningConversation.owner) :
             u.name));
 
     messageConversationLabel.setText("Conversation: " + owningConversation.title);
@@ -186,5 +216,9 @@ public final class MessagePanel extends JPanel {
 
       messageListModel.addElement(displayString);
     }
+  }
+
+  public BroadCastReceiver getReceiver() {
+    return this.receiver;
   }
 }

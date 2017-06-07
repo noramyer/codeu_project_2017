@@ -1,7 +1,6 @@
 
 # CODEU CHAT SERVER | README
 
-
 ## DISCLAIMER
 
 CODEU is a program created by Google to develop the skills of future software
@@ -9,6 +8,16 @@ engineers. This project is not an offical Google Product. This project is a
 playground for those looking to develop their coding and software engineering
 skills.
 
+## DEPENDENCIES
+
+  1. Must have [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) Installed
+  Check Java version with:
+     ```
+       $ java -version
+       ```
+  1. Install the Google Cloud SDK [here](https://cloud.google.com/sdk/)
+  
+  1. Make sure it is correctly in your path before proceeding to run the server
 
 ## ENVIRONMENT
 
@@ -16,8 +25,17 @@ All instructions here are relative to a LINUX environment. There will be some
 differences if you are working on a non-LINUX system. We will not support any
 other development environment.
 
-This project was built using JAVA 7. It is recommended that you install
-JAVA&nbsp;7 when working with this project.
+This project was built using JAVA 8. It is recommended that you install
+JAVA&nbsp;8 when working with this project. 
+
+In order for sentiment analysis to work, the Google Cloud SDK must be installed 
+on the server machine. Additionally the the cloud SDK must have permission to access
+the natural language API. To do this a service account key must be provided. Finally, 
+after the SDK has the necessary permissions, an environment variable:
+`GOOGLE_APPLICATION_CREDENTIALS=/path/to/service_account.json` 
+must be created. 
+
+More Info can be found [here](https://cloud.google.com/natural-language/docs/getting-started)
 
 
 ## GETTING STARTED
@@ -37,15 +55,41 @@ JAVA&nbsp;7 when working with this project.
      the following two commands in separate shells:
 
        ```
-       $ sh run_server.sh
-       $ sh run_client.sh
+       $ sh run_server.sh <team_id> <team_secret> <port> <persistent-dir>
+       $ sh run_simple_gui_client2.sh <host> <port>
+       ```
+  1. To observe the user sentiment scores, in a seperate shell run: 
+       ```
+       $ sh run_client.sh <host> <port>
+       >> u-list-all
        ```
 
-     The `run_server` and `run_client` scripts have hard-coded addresses for
-     your local machine. If you are running the server on a different machine
-     than the client, you will need to change the host portion of the address
-     in `run_client.sh` to the name of the host where your server is running.
-     Make sure the client and server are using the same port number.
+     You must specify the following startup arguments for `run_server.sh:
+     + `<team_id>` and `<team_secret>`: a numeric id for your team, and a secret
+       code, which are used to authenticate your server with the Relay server.
+       You can specify any integer value for `<team_id>`, and a value expressed
+       in hexadecimal format (using numbers `0-9` and letters in the range
+       `A-F`) for `<team_secret>` when you launch the server in your local setup
+       since it will not connect to the Relay server.
+     + `<port>`: the TCP port that your Server will listen on for connections
+       from the Client. You can use any value between 1024 and 65535, as long as
+       there is no other service currently listening on that port in your
+       system. The server will return an error:
+
+         ```
+         java.net.BindException: Address already in use (Bind failed)
+         ```
+
+       if the port is already in use.
+     + `<persistent-dir>`: the path where you want the server to save data between
+       runs.
+
+     The startup arguments for `run_client.sh` are the following:
+     + `<host>`: the hostname or IP address of the computer on which the server
+       is listening. If you are running server and client on the same computer,
+       you can use `localhost` here.
+     + `<port>`: the port on which your server is listening. Must be the same
+       port number you have specified when you launched `run_server.sh`.
 
 All running images write informational and exceptional events to log files.
 The default setting for log messages is "INFO". You may change this to get
@@ -66,10 +110,11 @@ All the source files (except test-related source files) are in
 use the supplied scripts to build the project, the `.class` files will be placed
 in `./bin`. There is a `./third_party` directory that holds the jar files for
 JUnit (a Java testing framework). Your environment may or may not already have
-this installed. The supplied scripts use the version in ./third_party.
+this installed. The supplied scripts use the version in `./third_party`.
 
 Finally, there are some high-level design documents in the project Wiki. Please
 review them as they can help you find your way around the sources.
+
 
 
 ## Source Directories
@@ -79,8 +124,8 @@ main packages/directories under `src/codeu/chat` are:
 
 ### codeu.chat.client
 
-Classes for building the two clients (`codeu.chat.ClientMain` and
-`codeu.chat.SimpleGuiClientMain`).
+Classes for building the three clients (`codeu.chat.ClientMain`,
+`codeu.chat.SimpleGuiClientMain`, and `codeu.chat.SimpleGuiClientMain2`).
 
 ### codeu.chat.server
 

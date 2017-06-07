@@ -14,9 +14,9 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
 import java.util.Collection;
-
-import codeu.chat.common.Uuid;
 
 // LOGICAL VIEW
 //

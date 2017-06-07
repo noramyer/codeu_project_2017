@@ -14,6 +14,11 @@
 
 package codeu.chat.relay;
 
+import codeu.chat.common.LinearUuidGenerator;
+import codeu.chat.common.Relay;
+import codeu.chat.util.Logger;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,13 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Relay;
-import codeu.chat.common.Time;
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
-import codeu.chat.util.Logger;
 
 public final class Server implements Relay {
 
@@ -46,13 +44,19 @@ public final class Server implements Relay {
     }
 
     @Override
-    public Uuid id() { return id; }
+    public Uuid id() {
+      return id;
+    }
 
     @Override
-    public String text() { return text; }
+    public String text() {
+      return text;
+    }
 
     @Override
-    public Time time() { return time; }
+    public Time time() {
+      return time;
+    }
 
   }
 
@@ -66,11 +70,11 @@ public final class Server implements Relay {
     private final Component message;
 
     public Bundle(Uuid id,
-                  Time time,
-                  Uuid team,
-                  Component user,
-                  Component conversation,
-                  Component message) {
+        Time time,
+        Uuid team,
+        Component user,
+        Component conversation,
+        Component message) {
 
       this.id = id;
       this.time = time;
@@ -82,22 +86,34 @@ public final class Server implements Relay {
     }
 
     @Override
-    public Uuid id() { return id; }
+    public Uuid id() {
+      return id;
+    }
 
     @Override
-    public Time time() { return time; }
+    public Time time() {
+      return time;
+    }
 
     @Override
-    public Uuid team() { return team; }
+    public Uuid team() {
+      return team;
+    }
 
     @Override
-    public Component user() { return user; }
+    public Component user() {
+      return user;
+    }
 
     @Override
-    public Component conversation() { return conversation; }
+    public Component conversation() {
+      return conversation;
+    }
 
     @Override
-    public Component message() { return message; }
+    public Component message() {
+      return message;
+    }
 
   }
 
@@ -124,7 +140,7 @@ public final class Server implements Relay {
   // As a side note, the ids start at 1 and not 0 to avoid the first id from
   // matching the NULL id which is defined as (null, 0);
 
- private final Uuid.Generator idGenerator = new LinearUuidGenerator(null, 1, Integer.MAX_VALUE);
+  private final Uuid.Generator idGenerator = new LinearUuidGenerator(null, 1, Integer.MAX_VALUE);
 
   // SERVER
   //
@@ -153,8 +169,8 @@ public final class Server implements Relay {
     }
 
     LOG.info(open ?
-             "Adding team was successful" :
-             "Adding team failed - team id already exists");
+        "Adding team was successful" :
+        "Adding team failed - team id already exists");
 
     return open;
   }
@@ -166,10 +182,10 @@ public final class Server implements Relay {
 
   @Override
   public boolean write(Uuid teamId,
-                       byte[] teamSecret,
-                       Relay.Bundle.Component user,
-                       Relay.Bundle.Component conversation,
-                       Relay.Bundle.Component message) {
+      byte[] teamSecret,
+      Relay.Bundle.Component user,
+      Relay.Bundle.Component conversation,
+      Relay.Bundle.Component message) {
 
     if (authenticate(teamId, teamSecret)) {
 
@@ -181,7 +197,7 @@ public final class Server implements Relay {
           message.id());
 
       if (history.size() >= maxHistory) {
-         history.remove();
+        history.remove();
       }
 
       return history.offer(new Bundle(
@@ -211,29 +227,23 @@ public final class Server implements Relay {
 
     if (authenticate(teamId, teamSecret)) {
 
-      int remaining = Math.min(range, maxRead);
-
       LOG.info(
-         "Request to read from server requested=%d allowed=%d",
+          "Request to read from server requested=%d allowed=%d",
           range,
           maxRead);
 
-      // Writing is a one way flag (once set it will not be unset) that switches
-      // between looking for the starting message and writing all messages to the
-      // output.
-      boolean writing = root == Uuids.NULL || root == null;
-
       for (final Relay.Bundle message : history) {
 
-        if (writing && remaining > 0) {
+        // Only add a message if there is room. We cannot stop
+        // searching in case we see the root later on.
+        if (found.size() < Math.min(range, maxRead)) {
           found.add(message);
         }
 
-        remaining = Math.max(remaining - 1, 0);
-
-        // Only update "writing" after the check as the root is already known and
-        // should not be included in the output.
-        writing |= Uuids.equals(root, message.id());
+        // If the start is found, drop all previous messages.
+        if (message.id().equals(root)) {
+          found.clear();
+        }
       }
 
       LOG.info(

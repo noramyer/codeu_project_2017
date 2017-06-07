@@ -14,17 +14,16 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
-
 import codeu.chat.common.BasicController;
 import codeu.chat.common.Conversation;
 import codeu.chat.common.Message;
+import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
-import codeu.chat.common.Time;
+import codeu.chat.common.SentimentScore;
 import codeu.chat.common.User;
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
 
 public final class Controller implements RawController, BasicController {
 
@@ -54,7 +53,8 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
-  public Message newMessage(Uuid id, Uuid author, Uuid conversation, String body, Time creationTime) {
+  public Message newMessage(Uuid id, Uuid author, Uuid conversation, String body,
+      Time creationTime) {
 
     final User foundUser = model.userById().first(author);
     final Conversation foundConversation = model.conversationById().first(conversation);
@@ -63,14 +63,14 @@ public final class Controller implements RawController, BasicController {
 
     if (foundUser != null && foundConversation != null && isIdFree(id)) {
 
-      message = new Message(id, Uuids.NULL, Uuids.NULL, creationTime, author, body);
+      message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
       LOG.info("Message added: %s", message.id);
 
       // Find and update the previous "last" message so that it's "next" value
       // will point to the new message.
 
-      if (Uuids.equals(foundConversation.lastMessage, Uuids.NULL)) {
+      if (Uuid.equals(foundConversation.lastMessage, Uuid.NULL)) {
 
         // The conversation has no messages in it, that's why the last message is NULL (the first
         // message should be NULL too. Since there is no last message, then it is not possible
@@ -86,9 +86,9 @@ public final class Controller implements RawController, BasicController {
       // not change.
 
       foundConversation.firstMessage =
-          Uuids.equals(foundConversation.firstMessage, Uuids.NULL) ?
-          message.id :
-          foundConversation.firstMessage;
+          Uuid.equals(foundConversation.firstMessage, Uuid.NULL) ?
+              message.id :
+              foundConversation.firstMessage;
 
       // Update the conversation to point to the new last message as it has changed.
 
@@ -109,7 +109,7 @@ public final class Controller implements RawController, BasicController {
 
     if (isIdFree(id)) {
 
-      user = new User(id, name, creationTime);
+      user = new User(id, name, creationTime, new SentimentScore());
       model.add(user);
 
       LOG.info(
@@ -152,12 +152,12 @@ public final class Controller implements RawController, BasicController {
     Uuid candidate;
 
     for (candidate = uuidGenerator.make();
-         isIdInUse(candidate);
-         candidate = uuidGenerator.make()) {
+        isIdInUse(candidate);
+        candidate = uuidGenerator.make()) {
 
-     // Assuming that "randomUuid" is actually well implemented, this
-     // loop should never be needed, but just incase make sure that the
-     // Uuid is not actually in use before returning it.
+      // Assuming that "randomUuid" is actually well implemented, this
+      // loop should never be needed, but just incase make sure that the
+      // Uuid is not actually in use before returning it.
 
     }
 
@@ -166,10 +166,12 @@ public final class Controller implements RawController, BasicController {
 
   private boolean isIdInUse(Uuid id) {
     return model.messageById().first(id) != null ||
-           model.conversationById().first(id) != null ||
-           model.userById().first(id) != null;
+        model.conversationById().first(id) != null ||
+        model.userById().first(id) != null;
   }
 
-  private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
+  private boolean isIdFree(Uuid id) {
+    return !isIdInUse(id);
+  }
 
 }

@@ -14,14 +14,16 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.Serializer;
+import codeu.chat.util.Serializers;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
+import com.google.gson.Gson;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import codeu.chat.util.Serializer;
-import codeu.chat.util.Serializers;
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
+import java.io.PrintWriter;
 
 public final class User {
 
@@ -30,21 +32,36 @@ public final class User {
     @Override
     public void write(OutputStream out, User value) throws IOException {
 
-      Uuids.SERIALIZER.write(out, value.id);
+      Uuid.SERIALIZER.write(out, value.id);
       Serializers.STRING.write(out, value.name);
       Time.SERIALIZER.write(out, value.creation);
-
+      SentimentScore.SERIALIZER.write(out, value.sentimentScore);
     }
 
     @Override
     public User read(InputStream in) throws IOException {
 
       return new User(
-          Uuids.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
           Serializers.STRING.read(in),
-          Time.SERIALIZER.read(in)
+          Time.SERIALIZER.read(in),
+          SentimentScore.SERIALIZER.read(in)
       );
 
+    }
+
+    @Override
+    public void write(PrintWriter out, User value) {
+      Gson gson = Serializers.GSON;
+      String output = gson.toJson(value);
+      out.println(output);
+    }
+
+    @Override
+    public User read(BufferedReader in) throws IOException {
+      Gson gson = Serializers.GSON;
+      User value = gson.fromJson(in.readLine(), User.class);
+      return value;
     }
   };
 
@@ -52,11 +69,19 @@ public final class User {
   public final String name;
   public final Time creation;
 
-  public User(Uuid id, String name, Time creation) {
+  /*
+   * The sentiment score is public since the only way to update it is by connecting to the natural
+   * language API, which only the server can do. As such, the client must request a new sentiment
+   * score from the server
+   */
+  public SentimentScore sentimentScore;
+
+  public User(Uuid id, String name, Time creation, SentimentScore score) {
 
     this.id = id;
     this.name = name;
     this.creation = creation;
+    this.sentimentScore = score;
 
   }
 }

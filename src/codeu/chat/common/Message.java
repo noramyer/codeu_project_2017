@@ -14,14 +14,16 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.Serializer;
+import codeu.chat.util.Serializers;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
+import com.google.gson.Gson;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import codeu.chat.util.Serializer;
-import codeu.chat.util.Serializers;
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
+import java.io.PrintWriter;
 
 public final class Message {
 
@@ -30,11 +32,11 @@ public final class Message {
     @Override
     public void write(OutputStream out, Message value) throws IOException {
 
-      Uuids.SERIALIZER.write(out, value.id);
-      Uuids.SERIALIZER.write(out, value.next);
-      Uuids.SERIALIZER.write(out, value.previous);
+      Uuid.SERIALIZER.write(out, value.id);
+      Uuid.SERIALIZER.write(out, value.next);
+      Uuid.SERIALIZER.write(out, value.previous);
       Time.SERIALIZER.write(out, value.creation);
-      Uuids.SERIALIZER.write(out, value.author);
+      Uuid.SERIALIZER.write(out, value.author);
       Serializers.STRING.write(out, value.content);
 
     }
@@ -43,14 +45,28 @@ public final class Message {
     public Message read(InputStream in) throws IOException {
 
       return new Message(
-          Uuids.SERIALIZER.read(in),
-          Uuids.SERIALIZER.read(in),
-          Uuids.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
           Time.SERIALIZER.read(in),
-          Uuids.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
           Serializers.STRING.read(in)
       );
 
+    }
+
+    @Override
+    public void write(PrintWriter out, Message value) {
+      Gson gson = Serializers.GSON;
+      String output = gson.toJson(value);
+      out.println(output);
+    }
+
+    @Override
+    public Message read(BufferedReader in) throws IOException {
+      Gson gson = Serializers.GSON;
+      Message value = gson.fromJson(in.readLine(), Message.class);
+      return value;
     }
   };
 

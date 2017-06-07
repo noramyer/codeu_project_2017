@@ -14,14 +14,16 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.Serializer;
+import codeu.chat.util.Serializers;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
+import com.google.gson.Gson;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
-import codeu.chat.util.Serializer;
-import codeu.chat.util.Serializers;
+import java.io.PrintWriter;
 
 public final class ConversationSummary implements ListViewable {
 
@@ -30,8 +32,8 @@ public final class ConversationSummary implements ListViewable {
     @Override
     public void write(OutputStream out, ConversationSummary value) throws IOException {
 
-      Uuids.SERIALIZER.write(out, value.id);
-      Uuids.SERIALIZER.write(out, value.owner);
+      Uuid.SERIALIZER.write(out, value.id);
+      Uuid.SERIALIZER.write(out, value.owner);
       Time.SERIALIZER.write(out, value.creation);
       Serializers.STRING.write(out, value.title);
 
@@ -41,12 +43,26 @@ public final class ConversationSummary implements ListViewable {
     public ConversationSummary read(InputStream in) throws IOException {
 
       return new ConversationSummary(
-          Uuids.SERIALIZER.read(in),
-          Uuids.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
           Time.SERIALIZER.read(in),
           Serializers.STRING.read(in)
       );
 
+    }
+
+    @Override
+    public void write(PrintWriter out, ConversationSummary value) {
+      Gson gson = Serializers.GSON;
+      String output = gson.toJson(value);
+      out.println(output);
+    }
+
+    @Override
+    public ConversationSummary read(BufferedReader in) throws IOException {
+      Gson gson = Serializers.GSON;
+      ConversationSummary value = gson.fromJson(in.readLine(), ConversationSummary.class);
+      return value;
     }
   };
 

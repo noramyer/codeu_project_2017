@@ -14,16 +14,17 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.Serializer;
+import codeu.chat.util.Serializers;
+import codeu.chat.util.Time;
+import codeu.chat.util.Uuid;
+import com.google.gson.Gson;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+import java.io.PrintWriter;
 import java.util.HashSet;
-
-import codeu.chat.common.Uuid;
-import codeu.chat.common.Uuids;
-import codeu.chat.util.Serializer;
-import codeu.chat.util.Serializers;
 
 public final class Conversation {
 
@@ -32,13 +33,13 @@ public final class Conversation {
     @Override
     public void write(OutputStream out, Conversation value) throws IOException {
 
-      Uuids.SERIALIZER.write(out, value.id);
-      Uuids.SERIALIZER.write(out, value.owner);
+      Uuid.SERIALIZER.write(out, value.id);
+      Uuid.SERIALIZER.write(out, value.owner);
       Time.SERIALIZER.write(out, value.creation);
       Serializers.STRING.write(out, value.title);
-      Serializers.collection(Uuids.SERIALIZER).write(out, value.users);
-      Uuids.SERIALIZER.write(out, value.firstMessage);
-      Uuids.SERIALIZER.write(out, value.lastMessage);
+      Serializers.collection(Uuid.SERIALIZER).write(out, value.users);
+      Uuid.SERIALIZER.write(out, value.firstMessage);
+      Uuid.SERIALIZER.write(out, value.lastMessage);
 
     }
 
@@ -46,19 +47,34 @@ public final class Conversation {
     public Conversation read(InputStream in) throws IOException {
 
       final Conversation value = new Conversation(
-          Uuids.SERIALIZER.read(in),
-          Uuids.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
+          Uuid.SERIALIZER.read(in),
           Time.SERIALIZER.read(in),
           Serializers.STRING.read(in)
       );
 
-      value.users.addAll(Serializers.collection(Uuids.SERIALIZER).read(in));
+      value.users.addAll(Serializers.collection(Uuid.SERIALIZER).read(in));
 
-      value.firstMessage = Uuids.SERIALIZER.read(in);
-      value.lastMessage = Uuids.SERIALIZER.read(in);
+      value.firstMessage = Uuid.SERIALIZER.read(in);
+      value.lastMessage = Uuid.SERIALIZER.read(in);
 
       return value;
 
+    }
+
+
+    @Override
+    public void write(PrintWriter out, Conversation value) {
+      Gson gson = Serializers.GSON;
+      String output = gson.toJson(value);
+      out.println(output);
+    }
+
+    @Override
+    public Conversation read(BufferedReader in) throws IOException {
+      Gson gson = Serializers.GSON;
+      Conversation value = gson.fromJson(in.readLine(), Conversation.class);
+      return value;
     }
   };
 
@@ -68,9 +84,9 @@ public final class Conversation {
   public final Uuid owner;
   public final Time creation;
   public final String title;
-  public final Collection<Uuid> users = new HashSet<>();
-  public Uuid firstMessage = Uuids.NULL;
-  public Uuid lastMessage = Uuids.NULL;
+  public final HashSet<Uuid> users = new HashSet<>();
+  public Uuid firstMessage = Uuid.NULL;
+  public Uuid lastMessage = Uuid.NULL;
 
   public Conversation(Uuid id, Uuid owner, Time creation, String title) {
 
